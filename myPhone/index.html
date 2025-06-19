@@ -27,6 +27,7 @@
             <div id="app-grid">
                 <div class="app-row">
                     <div class="app-icon" onclick="showScreen('world-book-screen')"><div class="icon-bg"><img src="https://i.postimg.cc/htP74QkL/1.jpg" alt="世界书"></div><span class="label">世界书</span></div>
+                    <div class="app-icon" onclick="showScreen('preset-settings-screen')"><div class="icon-bg"><img src="https://i.postimg.cc/tJnB8tB6/preset.png" alt="预设设置"></div><span class="label">预设设置</span></div>
                 </div>
                 <div class="app-row">
                     <div class="app-icon" onclick="showScreen('chat-list-screen')"><div class="icon-bg"><img src="https://i.postimg.cc/gr2ndvPL/QQ.jpg" alt="QQ"></div><span class="label">QQ</span></div>
@@ -34,6 +35,7 @@
                     <div class="app-icon" onclick="showScreen('wallpaper-screen')"><div class="icon-bg"><img src="https://i.postimg.cc/q6qRLdGx/photo.jpg" alt="壁纸"></div><span class="label">壁纸</span></div>
                 </div>
             </div>
+
         </div>
 
         <div id="world-book-screen" class="screen"><div class="header"><span class="back-btn" onclick="showScreen('home-screen')">‹</span><span>世界书</span><span class="action-btn" id="add-world-book-btn">+</span></div><div id="world-book-list"></div></div>
@@ -74,7 +76,36 @@
                 </div>
             </div>
         </div>
-
+        <div id="preset-settings-screen" class="screen">
+            <div class="header">
+                <span class="back-btn" onclick="showScreen('home-screen')">‹</span>
+                <span>预设设置</span>
+                <span id="restore-preset-settings-btn" style="font-size: 14px; width: auto; color: var(--accent-color); font-weight: normal; cursor: pointer;">恢复默认</span>
+            </div>
+            <div class="form-container">
+                <div class="form-group">
+                    <label for="prompt-image-input">发送图片提示词</label>
+                    <textarea id="prompt-image-input" rows="5" placeholder="定义AI如何发送'描述性图片'..."></textarea>
+                </div>
+                <div class="form-group">
+                    <label for="prompt-voice-input">发送语音提示词</label>
+                    <textarea id="prompt-voice-input" rows="4" placeholder="定义AI如何发送'模拟语音'..."></textarea>
+                </div>
+                <div class="form-group">
+                    <label for="prompt-transfer-input">转账提示词</label>
+                    <textarea id="prompt-transfer-input" rows="5" placeholder="定义AI如何进行'转账'..."></textarea>
+                </div>
+                <div class="form-group">
+                    <label for="prompt-single-input">单聊预设 (System Prompt)</label>
+                    <textarea id="prompt-single-input" rows="12" placeholder="定义单聊时AI的核心角色和规则..."></textarea>
+                </div>
+                <div class="form-group">
+                    <label for="prompt-group-input">群聊预设 (System Prompt)</label>
+                    <textarea id="prompt-group-input" rows="12" placeholder="定义群聊时AI的核心角色和规则..."></textarea>
+                </div>
+                <button class="form-button" id="save-preset-settings-btn">保存设置</button>
+            </div>
+        </div>
         <div id="chat-list-screen" class="screen"><div class="header"><span class="back-btn" onclick="showScreen('home-screen')">‹</span><span>消息</span><div class="header-actions"><span class="action-btn" id="add-group-chat-btn" title="创建群聊"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M17.5 17.5C19.1569 17.5 20.5 16.1569 20.5 14.5C20.5 12.8431 19.1569 11.5 17.5 11.5C15.8431 11.5 14.5 12.8431 14.5 14.5C14.5 16.1569 15.8431 17.5 17.5 17.5Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M21 21L19 19" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M8.5 11.5C10.1569 11.5 11.5 10.1569 11.5 8.5C11.5 6.84315 10.1569 5.5 8.5 5.5C6.84315 5.5 5.5 6.84315 5.5 8.5C5.5 10.1569 6.84315 11.5 8.5 11.5Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M12.5 14.5H4.5C3.39543 14.5 2.5 15.3954 2.5 16.5V18.5H12.5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></span><span class="action-btn" id="add-chat-btn">+</span></div></div><div id="chat-list"></div></div>
 
         <div id="chat-interface-screen" class="screen">

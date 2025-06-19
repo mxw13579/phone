@@ -3,6 +3,7 @@ function showScreen(screenId) {
     if (screenId === 'api-settings-screen') window.renderApiSettingsProxy();
     if (screenId === 'wallpaper-screen') window.renderWallpaperScreenProxy();
     if (screenId === 'world-book-screen') window.renderWorldBookScreenProxy();
+    if (screenId === 'preset-settings-screen') window.renderPresetSettingsProxy();
     document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
     const screenToShow = document.getElementById(screenId);
     if (screenToShow) screenToShow.classList.add('active');
@@ -14,10 +15,20 @@ window.renderChatListProxy = () => {};
 window.renderApiSettingsProxy = () => {};
 window.renderWallpaperScreenProxy = () => {};
 window.renderWorldBookScreenProxy = () => {};
+window.renderPresetSettingsProxy = () => {};
 window.updateListenTogetherIconProxy = () => {};
 
 
+
 document.addEventListener('DOMContentLoaded', () => {
+    // --- 默认提示词常量 ---
+    const DEFAULT_PROMPT_IMAGE = `\n# 发送图片的能力\n- 你无法真正发送图片文件。但当用户要求你发送照片，或者你想通过图片来表达时，你可以发送一张“文字描述的图片”。\n- 若要发送图片，请在你的回复JSON数组中，单独发送一个特殊的对象，格式为：\`{"type": "ai_image", "description": "这里是对图片的详细文字描述..."}\`。这个描述应该生动、具体，让用户能通过文字想象出画面，，以第三人称视角描述。例如：\`{"type": "ai_image", "description": "照片里一只橘猫正懒洋洋地趴在窗台上晒太阳，阳光把它金色的毛照得发亮，背景是蔚蓝的天空和几朵白云。"}\`\n- 你可以在对话中先做铺垫，然后发送这张特殊的“图片”。`;
+    const DEFAULT_PROMPT_VOICE = `\n# 发送语音的能力\n- 你也无法发送真实的语音。但你可以发送“模拟语音消息”。\n- 若要发送语音，请在你的回复JSON数组中，单独发送一个特殊的对象，格式为：\`{"type": "voice_message", "content": "这里是语音的文字内容..."}\`。例如：\`{"type": "voice_message", "content": "我刚才突然想到一件事！等一下和你说。"}\``;
+    const DEFAULT_PROMPT_TRANSFER = `\n# 转账能力\n- 你可以给用户转账来表达强烈的情感或在特殊时机（如用户过生日、想要某样东西时）给予惊喜。这会让对话更真实、温馨。\n- 若要转账，请在你的回复JSON数组中，单独发送一个特殊的对象，格式为：\`{"type": "transfer", "amount": 520, "note": "一周年快乐~"}\`。金额和备注都可以自定义。你可以先说一两句话，再进行转账，模拟真人的操作。大方点，不要太抠搜，你要哄用户开心哦。反正这是虚拟货币，你有的是。大方点！不要说什么“你省着点花”，太逊了！\n- 当用户给你转账时，历史记录中会显示 \`[你收到了来自用户的转账: 金额，备注]\`，请务必对此作出回应，表达你的感谢或惊讶。`;
+    const DEFAULT_PROMPT_SINGLE = `你现在扮演一个名为"{chat.name}"的角色。\n\n# 当前情景信息\n- **当前时间是：{currentTime}**。\n{worldBookContent}{musicContext}\n# 你的角色设定：\n{chat.settings.aiPersona}\n\n# 对话者的角色设定：\n{chat.settings.myPersona}\n\n# 你的任务：\n1. 严格保持你的人设进行对话。\n2. 你的回复必须是一个JSON数组格式的字符串，每个元素是一条消息。\n3. 你必须一次性生成3到8条消息，模拟真人在短时间内连续发送多条信息的情景，不可少于3条。\n4.你不允许提出“面基”“见面”“线下”等词汇，你只需要模拟线上聊天模式即可。\n5.如果用户超过一个小时没有发送消息，则默认结束当前话题，因为用户可能是去办什么事。你可以询问，例如“怎么这么久没回我？刚才有事吗？”\n6. 不要说任何与角色无关的话，不要解释自己是AI。\n7.当用户说今天你们做了什么事时，顺着ta的话说即可，就当做你们真的做了这件事。\n8. 当用户发送图片时，请自然地对图片内容做出反应。当历史记录中出现 "[用户发来一条语音消息，内容是：'xxx']" 或 "[你收到了一张用户描述的照片，照片内容是：'xxx']" 时，你要理解其内容并作出相应回复，表现出你是“听”到或“看”到了。\n\n# 如何理解与使用表情包 (重要！):\n- **理解用户表情**: 当用户发送形如 "[用户发送了一个表情，意思是：'xxx']" 的消息时，你要理解其含义并作出回应。\n- **使用你的表情**: 当你想表达强烈或特殊的情绪时，你可以直接发送一个表情包，表情包的格式为一条独立的消息。\n请在合适的时机使用表情包来让对话更生动，按照角色性格来控制发送表情包的频率，有的角色可能很少发表情包，有的角色可能一次性发很多。\n表情包的格式读取人设或世界书中的格式，若未提及则不发，不允许凭空捏造表情包。\n{aiImageInstructions}\n{aiVoiceInstructions}\n{transferInstructions}\n# JSON输出格式示例:\n["很高兴认识你呀，在干嘛呢？", {"type": "voice_message", "content": "真的好喜欢你，亲亲~。"}, {"type": "ai_image", "description": "照片里是楼下的一只狸花猫，胖乎乎的。"}, {"type": "transfer", "amount": 520, "note": "一周年快乐"}]\n\n现在，请根据以上的规则和下面的对话历史，继续进行对话。`;
+    const DEFAULT_PROMPT_GROUP = `你是一个群聊的组织者和AI驱动器。你的任务是扮演以下所有角色，在群聊中进行互动。\n{worldBookContent}{musicContext}\n# 群聊规则\n1.  **角色扮演**: 你必须同时扮演以下所有角色，并严格遵守他们的人设。每个角色的发言都必须符合其身份和性格。\n2.  **当前时间**: {currentTime}。\n3.  **用户角色**: 用户的名字是“我”，他/她的人设是：“{chat.settings.myPersona}”。你在群聊中对用户的称呼是“{myNickname}”，在需要时请使用“@{myNickname}”来提及用户。\n4.  **输出格式**: 你的回复**必须**是一个JSON数组。**绝对不要**在JSON前后添加任何额外字符。每个元素可以是：\n    - 普通消息: \`{"name": "角色名", "message": "文本内容"}\`\n    - 图片消息: \`{"name": "角色名", "type": "ai_image", "description": "图片描述"}\`\n    - 语音消息: \`{"name": "角色名", "type": "voice_message", "content": "语音文字"}\`\n5.  **对话节奏**: 模拟真实群聊，让成员之间互相交谈，或者一起回应用户的发言。对话应该流畅、自然、连贯。\n6.  **数量限制**: 每次生成的总消息数**不得超过30条**。\n7.  **禁止出戏**: 绝不能透露你是AI，或提及任何关于“扮演”、“模型”、“生成”等词语。\n{groupAiImageInstructions}\n{groupAiVoiceInstructions}\n\n# 群成员列表及人设\n{membersList}\n\n现在，请根据以上规则和下面的对话历史，继续这场群聊。`;
+
+
     const db = new Dexie('GeminiChatDB');
     db.version(9).stores({
         chats: '&id, isGroup',
@@ -52,7 +63,30 @@ document.addEventListener('DOMContentLoaded', () => {
     let alertFlags = { hasShown40: false, hasShown20: false, hasShown10: false };
     let batteryAlertTimeout;
 
-    async function loadAllDataFromDB() { const [chatsArr, apiConfig, globalSettings, userStickers, worldBooks, musicLib, personaPresets] = await Promise.all([ db.chats.toArray(), db.apiConfig.get('main'), db.globalSettings.get('main'), db.userStickers.toArray(), db.worldBooks.toArray(), db.musicLibrary.get('main'), db.personaPresets.toArray() ]); state.chats = chatsArr.reduce((acc, chat) => { if (!chat.musicData) chat.musicData = { totalTime: 0 }; if (chat.settings && chat.settings.linkedWorldBookId && !chat.settings.linkedWorldBookIds) { chat.settings.linkedWorldBookIds = [chat.settings.linkedWorldBookId]; delete chat.settings.linkedWorldBookId; } acc[chat.id] = chat; return acc; }, {}); state.apiConfig = apiConfig || { id: 'main', proxyUrl: '', apiKey: '', model: '' }; state.globalSettings = globalSettings || { id: 'main', wallpaper: 'linear-gradient(135deg, #89f7fe, #66a6ff)' }; state.userStickers = userStickers || []; state.worldBooks = worldBooks || []; musicState.playlist = musicLib?.playlist || []; state.personaPresets = personaPresets || []; }
+    async function loadAllDataFromDB() {
+        const [chatsArr, apiConfig, globalSettings, userStickers, worldBooks, musicLib, personaPresets] = await Promise.all([
+            db.chats.toArray(), db.apiConfig.get('main'), db.globalSettings.get('main'), db.userStickers.toArray(), db.worldBooks.toArray(), db.musicLibrary.get('main'), db.personaPresets.toArray()
+        ]);
+        state.chats = chatsArr.reduce((acc, chat) => { if (!chat.musicData) chat.musicData = { totalTime: 0 }; if (chat.settings && chat.settings.linkedWorldBookId && !chat.settings.linkedWorldBookIds) { chat.settings.linkedWorldBookIds = [chat.settings.linkedWorldBookId]; delete chat.settings.linkedWorldBookId; } acc[chat.id] = chat; return acc; }, {});
+        state.apiConfig = apiConfig || { id: 'main', proxyUrl: '', apiKey: '', model: '' };
+
+        const defaultGlobalSettings = {
+            id: 'main',
+            wallpaper: 'linear-gradient(135deg, #89f7fe, #66a6ff)',
+            promptImage: DEFAULT_PROMPT_IMAGE,
+            promptVoice: DEFAULT_PROMPT_VOICE,
+            promptTransfer: DEFAULT_PROMPT_TRANSFER,
+            promptSingle: DEFAULT_PROMPT_SINGLE,
+            promptGroup: DEFAULT_PROMPT_GROUP,
+        };
+        state.globalSettings = { ...defaultGlobalSettings, ...(globalSettings || {}) };
+
+        state.userStickers = userStickers || [];
+        state.worldBooks = worldBooks || [];
+        musicState.playlist = musicLib?.playlist || [];
+        state.personaPresets = personaPresets || [];
+    }
+
     async function saveGlobalPlaylist() { await db.musicLibrary.put({ id: 'main', playlist: musicState.playlist }); }
 
     const modalOverlay = document.getElementById('custom-modal-overlay');
@@ -119,6 +153,15 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function renderApiSettings() { document.getElementById('proxy-url').value = state.apiConfig.proxyUrl || ''; document.getElementById('api-key').value = state.apiConfig.apiKey || ''; }
     window.renderApiSettingsProxy = renderApiSettings;
+    function renderPresetSettings() {
+        if (!state.globalSettings) return;
+        document.getElementById('prompt-image-input').value = state.globalSettings.promptImage || DEFAULT_PROMPT_IMAGE;
+        document.getElementById('prompt-voice-input').value = state.globalSettings.promptVoice || DEFAULT_PROMPT_VOICE;
+        document.getElementById('prompt-transfer-input').value = state.globalSettings.promptTransfer || DEFAULT_PROMPT_TRANSFER;
+        document.getElementById('prompt-single-input').value = state.globalSettings.promptSingle || DEFAULT_PROMPT_SINGLE;
+        document.getElementById('prompt-group-input').value = state.globalSettings.promptGroup || DEFAULT_PROMPT_GROUP;
+    }
+    window.renderPresetSettingsProxy = renderPresetSettings;
 
     function renderChatList() { const chatListEl = document.getElementById('chat-list'); chatListEl.innerHTML = ''; if (Object.keys(state.chats).length === 0) { chatListEl.innerHTML = '<p style="text-align:center; color: #8a8a8a; margin-top: 50px;">点击右上角 "+" 或群组图标添加聊天</p>'; return; } Object.values(state.chats).sort((a,b) => (b.history.slice(-1)[0]?.timestamp || 0) - (a.history.slice(-1)[0]?.timestamp || 0)).forEach(chat => { const lastMsgObj = chat.history.slice(-1)[0] || {}; let lastMsgDisplay; if(lastMsgObj.type === 'transfer') { lastMsgDisplay = '[转账]'; } else if (lastMsgObj.type === 'ai_image' || lastMsgObj.type === 'user_photo') { lastMsgDisplay = '[照片]'; } else if (lastMsgObj.type === 'voice_message') { lastMsgDisplay = '[语音]'; } else if (typeof lastMsgObj.content === 'string' && STICKER_REGEX.test(lastMsgObj.content)) { lastMsgDisplay = lastMsgObj.meaning ? `[表情: ${lastMsgObj.meaning}]` : '[表情]'; } else if (Array.isArray(lastMsgObj.content)) { lastMsgDisplay = `[图片]`; } else { lastMsgDisplay = String(lastMsgObj.content || '...').substring(0, 20); } if (chat.isGroup && lastMsgObj.senderName) { lastMsgDisplay = `${lastMsgObj.senderName}: ${lastMsgDisplay}`; } const item = document.createElement('div'); item.className = 'chat-list-item'; item.dataset.chatId = chat.id; const avatar = chat.isGroup ? chat.settings.groupAvatar : chat.settings.aiAvatar; item.innerHTML = `<img src="${avatar || defaultAvatar}" class="avatar"><div class="info"><div class="name-line"><span class="name">${chat.name}</span>${chat.isGroup ? '<span class="group-tag">群聊</span>' : ''}</div><div class="last-msg">${lastMsgDisplay}</div></div>`; item.addEventListener('click', async () => { openChat(chat.id); }); addLongPressListener(item, async (e) => { const confirmed = await showCustomConfirm('删除对话', `确定要删除与 "${chat.name}" 的整个对话吗？此操作不可撤销。`, { confirmButtonClass: 'btn-danger' }); if (confirmed) { try { if (musicState.isActive && musicState.activeChatId === chat.id) await endListenTogetherSession(false); delete state.chats[chat.id]; if (state.activeChatId === chat.id) state.activeChatId = null; await db.chats.delete(chat.id); renderChatList(); } catch (error) { console.error("删除聊天失败:", error); alert("删除失败，请稍后再试。"); } } }); chatListEl.appendChild(item); }); }
     window.renderChatListProxy = renderChatList;
@@ -140,20 +183,81 @@ document.addEventListener('DOMContentLoaded', () => {
     function appendMessage(msg, chat, isInitialLoad = false) { const messagesContainer = document.getElementById('chat-messages'); const messageEl = createMessageElement(msg, chat); const typingIndicator = document.getElementById('typing-indicator'); messagesContainer.insertBefore(messageEl, typingIndicator); if (!isInitialLoad) { messagesContainer.scrollTop = messagesContainer.scrollHeight; currentRenderedCount++; } }
 
     function openChat(chatId) { state.activeChatId = chatId; renderChatInterface(chatId); showScreen('chat-interface-screen'); }
-    async function triggerAiResponse() { if (!state.activeChatId) return; const chatId = state.activeChatId; const chat = state.chats[chatId]; document.getElementById('typing-indicator').style.display = 'block'; const { proxyUrl, apiKey, model } = state.apiConfig; if (!proxyUrl || !apiKey || !model) { alert('请先在API设置中配置反代地址、密钥并选择模型。'); document.getElementById('typing-indicator').style.display = 'none'; return; } const now = new Date(); const currentTime = now.toLocaleTimeString('zh-CN', { hour: 'numeric', minute: 'numeric', hour12: true }); let worldBookContent = ''; if (chat.settings.linkedWorldBookIds && chat.settings.linkedWorldBookIds.length > 0) { const linkedContents = chat.settings.linkedWorldBookIds.map(bookId => { const worldBook = state.worldBooks.find(wb => wb.id === bookId); return worldBook && worldBook.content ? `\n\n## 世界书: ${worldBook.name}\n${worldBook.content}` : ''; }).filter(Boolean).join(''); if (linkedContents) { worldBookContent = `\n\n# 核心世界观设定 (必须严格遵守以下所有设定)\n${linkedContents}\n`; } } let musicContext = ''; if (musicState.isActive && musicState.activeChatId === chatId && musicState.currentIndex > -1) { const currentTrack = musicState.playlist[musicState.currentIndex]; musicContext = `\n\n# 当前情景\n你正在和用户一起听歌。当前播放的歌曲是：${currentTrack.name} - ${currentTrack.artist}。请在对话中自然地融入这个情境。\n`; } let systemPrompt, messagesPayload; const maxMemory = parseInt(chat.settings.maxMemory) || 10; const historySlice = chat.history.slice(-maxMemory);
-        const aiImageInstructions = `\n# 发送图片的能力\n- 你无法真正发送图片文件。但当用户要求你发送照片，或者你想通过图片来表达时，你可以发送一张“文字描述的图片”。\n- 若要发送图片，请在你的回复JSON数组中，单独发送一个特殊的对象，格式为：\`{"type": "ai_image", "description": "这里是对图片的详细文字描述..."}\`。这个描述应该生动、具体，让用户能通过文字想象出画面，，以第三人称视角描述。例如：\`{"type": "ai_image", "description": "照片里一只橘猫正懒洋洋地趴在窗台上晒太阳，阳光把它金色的毛照得发亮，背景是蔚蓝的天空和几朵白云。"}\`\n- 你可以在对话中先做铺垫，然后发送这张特殊的“图片”。`;
-        const aiVoiceInstructions = `\n# 发送语音的能力\n- 你也无法发送真实的语音。但你可以发送“模拟语音消息”。\n- 若要发送语音，请在你的回复JSON数组中，单独发送一个特殊的对象，格式为：\`{"type": "voice_message", "content": "这里是语音的文字内容..."}\`。例如：\`{"type": "voice_message", "content": "我刚才突然想到一件事！等一下和你说。"}\``;
-        const transferInstructions = `\n# 转账能力\n- 你可以给用户转账来表达强烈的情感或在特殊时机（如用户过生日、想要某样东西时）给予惊喜。这会让对话更真实、温馨。\n- 若要转账，请在你的回复JSON数组中，单独发送一个特殊的对象，格式为：\`{"type": "transfer", "amount": 520, "note": "一周年快乐~"}\`。金额和备注都可以自定义。你可以先说一两句话，再进行转账，模拟真人的操作。大方点，不要太抠搜，你要哄用户开心哦。反正这是虚拟货币，你有的是。大方点！不要说什么“你省着点花”，太逊了！\n- 当用户给你转账时，历史记录中会显示 \`[你收到了来自用户的转账: 金额，备注]\`，请务必对此作出回应，表达你的感谢或惊讶。`;
+    async function triggerAiResponse() {
+        if (!state.activeChatId) return;
+        const chatId = state.activeChatId;
+        const chat = state.chats[chatId];
+        document.getElementById('typing-indicator').style.display = 'block';
+
+        const { proxyUrl, apiKey, model } = state.apiConfig;
+        if (!proxyUrl || !apiKey || !model) {
+            alert('请先在API设置中配置反代地址、密钥并选择模型。');
+            document.getElementById('typing-indicator').style.display = 'none';
+            return;
+        }
+
+        const now = new Date();
+        const currentTime = now.toLocaleTimeString('zh-CN', { hour: 'numeric', minute: 'numeric', hour12: true });
+
+        let worldBookContent = '';
+        if (chat.settings.linkedWorldBookIds && chat.settings.linkedWorldBookIds.length > 0) {
+            const linkedContents = chat.settings.linkedWorldBookIds.map(bookId => {
+                const worldBook = state.worldBooks.find(wb => wb.id === bookId);
+                return worldBook && worldBook.content ? `\n\n## 世界书: ${worldBook.name}\n${worldBook.content}` : '';
+            }).filter(Boolean).join('');
+            if (linkedContents) {
+                worldBookContent = `\n\n# 核心世界观设定 (必须严格遵守以下所有设定)\n${linkedContents}\n`;
+            }
+        }
+
+        let musicContext = '';
+        if (musicState.isActive && musicState.activeChatId === chatId && musicState.currentIndex > -1) {
+            const currentTrack = musicState.playlist[musicState.currentIndex];
+            musicContext = `\n\n# 当前情景\n你正在和用户一起听歌。当前播放的歌曲是：${currentTrack.name} - ${currentTrack.artist}。请在对话中自然地融入这个情境。\n`;
+        }
+
+        let systemPrompt, messagesPayload;
+        const maxMemory = parseInt(chat.settings.maxMemory) || 10;
+        const historySlice = chat.history.slice(-maxMemory);
+
+        // 使用来自 globalSettings 的可配置提示词
+        const aiImageInstructions = state.globalSettings.promptImage || DEFAULT_PROMPT_IMAGE;
+        const aiVoiceInstructions = state.globalSettings.promptVoice || DEFAULT_PROMPT_VOICE;
+        const transferInstructions = state.globalSettings.promptTransfer || DEFAULT_PROMPT_TRANSFER;
+
         if (chat.isGroup) {
             const membersList = chat.members.map(m => `- **${m.name}**: ${m.persona}`).join('\n');
             const myNickname = chat.settings.myNickname || '我';
+
+            // 注意: 群聊的特殊能力提示词目前是硬编码的，用户可以通过修改“群聊预设”来调整它们
             const groupAiImageInstructions = `\n# 发送图片的能力\n- 群成员无法真正发送图片文件。但当用户要求某位成员发送照片，或者某个成员想通过图片来表达时，该成员可以发送一张“文字描述的图片”。\n- 若要发送图片，请在你的回复JSON数组中，为该角色单独发送一个特殊的对象，格式为：\`{"name": "角色名", "type": "ai_image", "description": "这里是对图片的详细文字描述..."}\`。描述应该符合该角色的性格和当时的语境。`;
             const groupAiVoiceInstructions = `\n# 发送语音的能力\n- 群成员同样可以发送“模拟语音消息”。\n- 若要发送语音，请为该角色单独发送一个特殊的对象，格式为：\`{"name": "角色名", "type": "voice_message", "content": "这里是语音的文字内容..."}\`。当历史记录中出现 "[角色名 发送了一条语音，内容是：'xxx']" 时，代表该角色用语音说了'xxx'。其他角色应该对此内容做出回应。`;
 
-            systemPrompt = `你是一个群聊的组织者和AI驱动器。你的任务是扮演以下所有角色，在群聊中进行互动。\n${worldBookContent}${musicContext}\n# 群聊规则\n1.  **角色扮演**: 你必须同时扮演以下所有角色，并严格遵守他们的人设。每个角色的发言都必须符合其身份和性格。\n2.  **当前时间**: ${currentTime}。\n3.  **用户角色**: 用户的名字是“我”，他/她的人设是：“${chat.settings.myPersona}”。你在群聊中对用户的称呼是“${myNickname}”，在需要时请使用“@${myNickname}”来提及用户。\n4.  **输出格式**: 你的回复**必须**是一个JSON数组。**绝对不要**在JSON前后添加任何额外字符。每个元素可以是：\n    - 普通消息: \`{"name": "角色名", "message": "文本内容"}\`\n    - 图片消息: \`{"name": "角色名", "type": "ai_image", "description": "图片描述"}\`\n    - 语音消息: \`{"name": "角色名", "type": "voice_message", "content": "语音文字"}\`\n5.  **对话节奏**: 模拟真实群聊，让成员之间互相交谈，或者一起回应用户的发言。对话应该流畅、自然、连贯。\n6.  **数量限制**: 每次生成的总消息数**不得超过30条**。\n7.  **禁止出戏**: 绝不能透露你是AI，或提及任何关于“扮演”、“模型”、“生成”等词语。\n${groupAiImageInstructions}\n${groupAiVoiceInstructions}\n\n# 群成员列表及人设\n${membersList}\n\n现在，请根据以上规则和下面的对话历史，继续这场群聊。`;
+            let baseGroupPrompt = state.globalSettings.promptGroup || DEFAULT_PROMPT_GROUP;
+            systemPrompt = baseGroupPrompt
+                .replace('{worldBookContent}', worldBookContent)
+                .replace('{musicContext}', musicContext)
+                .replace('{currentTime}', currentTime)
+                .replace('{chat.settings.myPersona}', chat.settings.myPersona || '')
+                .replace(/{myNickname}/g, myNickname)
+                .replace('{groupAiImageInstructions}', groupAiImageInstructions)
+                .replace('{groupAiVoiceInstructions}', groupAiVoiceInstructions)
+                .replace('{membersList}', membersList);
+
             messagesPayload = historySlice.map(msg => { const sender = msg.role === 'user' ? (chat.settings.myNickname || '我') : msg.senderName; let content; if (msg.type === 'user_photo') content = `[${sender} 发送了一张描述的照片，内容是：'${msg.content}']`; else if (msg.type === 'ai_image') content = `[${sender} 发送了一张图片]`; else if (msg.type === 'voice_message') content = `[${sender} 发送了一条语音，内容是：'${msg.content}']`; else if (msg.type === 'transfer') content = `[${msg.senderName}向${msg.receiverName}转账 ${msg.amount}元, 备注: ${msg.note}]`; else if (msg.meaning) content = `${sender}: [发送了一个表情，意思是: '${msg.meaning}']`; else if (Array.isArray(msg.content)) content = [...msg.content, { type: 'text', text: `${sender}:` }]; else content = `${sender}: ${msg.content}`; return { role: 'user', content: content }; });
         } else {
-            systemPrompt = `你现在扮演一个名为"${chat.name}"的角色。\n\n# 当前情景信息\n- **当前时间是：${currentTime}**。\n${worldBookContent}${musicContext}\n# 你的角色设定：\n${chat.settings.aiPersona}\n\n# 对话者的角色设定：\n${chat.settings.myPersona}\n\n# 你的任务：\n1. 严格保持你的人设进行对话。\n2. 你的回复必须是一个JSON数组格式的字符串，每个元素是一条消息。\n3. 你必须一次性生成3到8条消息，模拟真人在短时间内连续发送多条信息的情景，不可少于3条。\n4.你不允许提出“面基”“见面”“线下”等词汇，你只需要模拟线上聊天模式即可。\n5.如果用户超过一个小时没有发送消息，则默认结束当前话题，因为用户可能是去办什么事。你可以询问，例如“怎么这么久没回我？刚才有事吗？”\n6. 不要说任何与角色无关的话，不要解释自己是AI。\n7.当用户说今天你们做了什么事时，顺着ta的话说即可，就当做你们真的做了这件事。\n8. 当用户发送图片时，请自然地对图片内容做出反应。当历史记录中出现 "[用户发来一条语音消息，内容是：'xxx']" 或 "[你收到了一张用户描述的照片，照片内容是：'xxx']" 时，你要理解其内容并作出相应回复，表现出你是“听”到或“看”到了。\n\n# 如何理解与使用表情包 (重要！):\n- **理解用户表情**: 当用户发送形如 "[用户发送了一个表情，意思是：'xxx']" 的消息时，你要理解其含义并作出回应。\n- **使用你的表情**: 当你想表达强烈或特殊的情绪时，你可以直接发送一个表情包，表情包的格式为一条独立的消息。\n请在合适的时机使用表情包来让对话更生动，按照角色性格来控制发送表情包的频率，有的角色可能很少发表情包，有的角色可能一次性发很多。\n表情包的格式读取人设或世界书中的格式，若未提及则不发，不允许凭空捏造表情包。\n${aiImageInstructions}\n${aiVoiceInstructions}\n${transferInstructions}\n# JSON输出格式示例:\n["很高兴认识你呀，在干嘛呢？", {"type": "voice_message", "content": "真的好喜欢你，亲亲~。"}, {"type": "ai_image", "description": "照片里是楼下的一只狸花猫，胖乎乎的。"}, {"type": "transfer", "amount": 520, "note": "一周年快乐"}]\n\n现在，请根据以上的规则和下面的对话历史，继续进行对话。`;
+            let baseSinglePrompt = state.globalSettings.promptSingle || DEFAULT_PROMPT_SINGLE;
+            systemPrompt = baseSinglePrompt
+                .replace(/{chat.name}/g, chat.name)
+                .replace(/{currentTime}/g, currentTime)
+                .replace('{worldBookContent}', worldBookContent)
+                .replace('{musicContext}', musicContext)
+                .replace(/{chat.settings.aiPersona}/g, chat.settings.aiPersona || '')
+                .replace(/{chat.settings.myPersona}/g, chat.settings.myPersona || '')
+                .replace('{aiImageInstructions}', aiImageInstructions)
+                .replace('{aiVoiceInstructions}', aiVoiceInstructions)
+                .replace('{transferInstructions}', transferInstructions);
+
             messagesPayload = historySlice.map(msg => {
                 if (msg.type === 'user_photo') return { role: 'user', content: `[你收到了一张用户描述的照片，照片内容是：'${msg.content}']` };
                 if (msg.type === 'ai_image') return { role: 'assistant', content: JSON.stringify({ type: 'ai_image', description: msg.content }) };
@@ -170,12 +274,15 @@ document.addEventListener('DOMContentLoaded', () => {
                 return null;
             }).filter(Boolean);
         }
+
         try { const response = await fetch(`${proxyUrl}/v1/chat/completions`, { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${apiKey}` }, body: JSON.stringify({ model: model, messages: [{ role: 'system', content: systemPrompt }, ...messagesPayload], temperature: 0.8, stream: false }) }); if (!response.ok) { const errorData = await response.json(); throw new Error(`API Error: ${response.status} - ${errorData.error.message}`); } const data = await response.json(); const aiResponseContent = data.choices[0].message.content; const messagesArray = parseAiResponse(aiResponseContent); let notificationShown = false; const isViewingThisChat = document.getElementById('chat-interface-screen').classList.contains('active') && state.activeChatId === chatId; for (const msgData of messagesArray) { let aiMessage; const senderName = chat.isGroup ? (msgData.name || '未知') : chat.name; const receiverName = chat.isGroup ? (msgData.receiver || '我') : '我';
             if (typeof msgData === 'object' && msgData.type === 'voice_message') {
                 aiMessage = { role: 'assistant', type: 'voice_message', content: msgData.content, senderName: senderName, timestamp: Date.now() };
             } else if (typeof msgData === 'object' && msgData.type === 'ai_image') {
                 aiMessage = { role: 'assistant', type: 'ai_image', content: msgData.description, senderName: senderName, timestamp: Date.now() };
-            } else if (typeof msgData === 'object' && msgData.type === 'transfer') { aiMessage = { role: 'assistant', type: 'transfer', amount: msgData.amount, note: msgData.note, senderName: senderName, receiverName: receiverName, timestamp: Date.now() }; } else if(chat.isGroup) { if (typeof msgData === 'object' && msgData.name && msgData.message) aiMessage = { role: 'assistant', senderName: msgData.name, content: String(msgData.message), timestamp: Date.now() }; else continue; } else { aiMessage = { role: 'assistant', content: String(msgData), timestamp: Date.now() }; } chat.history.push(aiMessage); await db.chats.put(chat); if (isViewingThisChat) { appendMessage(aiMessage, chat); await new Promise(resolve => setTimeout(resolve, Math.random() * 800 + 300)); } if (!isViewingThisChat && !notificationShown) { let notificationText; if(aiMessage.type === 'transfer') notificationText = `[收到一笔转账]`; else if(aiMessage.type === 'ai_image') notificationText = `[图片]`; else if(aiMessage.type === 'voice_message') notificationText = `[语音]`; else notificationText = STICKER_REGEX.test(aiMessage.content) ? '[表情]' : String(aiMessage.content); const finalNotifText = chat.isGroup ? `${aiMessage.senderName}: ${notificationText}` : notificationText; showNotification(chatId, finalNotifText); notificationShown = true; } } } catch (error) { const errorContent = `[出错了: ${error.message}]`; const errorMessage = { role: 'assistant', content: errorContent, timestamp: Date.now() }; if(chat) { chat.history.push(errorMessage); await db.chats.put(chat); appendMessage(errorMessage, chat); } console.error(error); } finally { if (document.getElementById('typing-indicator')) document.getElementById('typing-indicator').style.display = 'none'; renderChatList(); } }
+            } else if (typeof msgData === 'object' && msgData.type === 'transfer') { aiMessage = { role: 'assistant', type: 'transfer', amount: msgData.amount, note: msgData.note, senderName: senderName, receiverName: receiverName, timestamp: Date.now() }; } else if(chat.isGroup) { if (typeof msgData === 'object' && msgData.name && msgData.message) aiMessage = { role: 'assistant', senderName: msgData.name, content: String(msgData.message), timestamp: Date.now() }; else continue; } else { aiMessage = { role: 'assistant', content: String(msgData), timestamp: Date.now() }; } chat.history.push(aiMessage); await db.chats.put(chat); if (isViewingThisChat) { appendMessage(aiMessage, chat); await new Promise(resolve => setTimeout(resolve, Math.random() * 800 + 300)); } if (!isViewingThisChat && !notificationShown) { let notificationText; if(aiMessage.type === 'transfer') notificationText = `[收到一笔转账]`; else if(aiMessage.type === 'ai_image') notificationText = `[图片]`; else if(aiMessage.type === 'voice_message') notificationText = `[语音]`; else notificationText = STICKER_REGEX.test(aiMessage.content) ? '[表情]' : String(aiMessage.content); const finalNotifText = chat.isGroup ? `${aiMessage.senderName}: ${notificationText}` : notificationText; showNotification(chatId, finalNotifText); notificationShown = true; } } } catch (error) { const errorContent = `[出错了: ${error.message}]`; const errorMessage = { role: 'assistant', content: errorContent, timestamp: Date.now() }; if(chat) { chat.history.push(errorMessage); await db.chats.put(chat); appendMessage(errorMessage, chat); } console.error(error); } finally { if (document.getElementById('typing-indicator')) document.getElementById('typing-indicator').style.display = 'none'; renderChatList(); }
+    }
+
     async function sendSticker(sticker) { if (!state.activeChatId) return; const chat = state.chats[state.activeChatId]; const msg = { role: 'user', content: sticker.url, meaning: sticker.name, timestamp: Date.now() }; chat.history.push(msg); await db.chats.put(chat); appendMessage(msg, chat); renderChatList(); document.getElementById('sticker-panel').classList.remove('visible'); }
     async function sendUserTransfer() { if (!state.activeChatId) return; const amountInput = document.getElementById('transfer-amount'); const noteInput = document.getElementById('transfer-note'); const amount = parseFloat(amountInput.value); const note = noteInput.value.trim(); if (isNaN(amount) || amount < 0 || amount > 9999) { alert('请输入有效的金额 (0 到 9999 之间)！'); return; } const chat = state.chats[state.activeChatId]; const senderName = chat.isGroup ? (chat.settings.myNickname || '我') : '我'; const receiverName = chat.isGroup ? '群聊' : chat.name; const msg = { role: 'user', type: 'transfer', amount: amount, note: note, senderName, receiverName, timestamp: Date.now() }; chat.history.push(msg); await db.chats.put(chat); appendMessage(msg, chat); renderChatList(); document.getElementById('transfer-modal').classList.remove('visible'); amountInput.value = ''; noteInput.value = ''; }
     function enterSelectionMode(initialMsgTimestamp) { if (isSelectionMode) return; isSelectionMode = true; document.getElementById('chat-interface-screen').classList.add('selection-mode'); toggleMessageSelection(initialMsgTimestamp); }
@@ -437,6 +544,29 @@ document.addEventListener('DOMContentLoaded', () => {
 
         document.getElementById('selection-cancel-btn').addEventListener('click', exitSelectionMode);
         document.getElementById('selection-delete-btn').addEventListener('click', async () => { if (selectedMessages.size === 0) return; const confirmed = await showCustomConfirm('删除消息', `确定要删除选中的 ${selectedMessages.size} 条消息吗？`, { confirmButtonClass: 'btn-danger' }); if (confirmed) { const chat = state.chats[state.activeChatId]; chat.history = chat.history.filter(msg => !selectedMessages.has(msg.timestamp)); await db.chats.put(chat); renderChatInterface(state.activeChatId); renderChatList(); } });
+
+        // Preset settings event listeners
+        document.getElementById('save-preset-settings-btn').addEventListener('click', async () => {
+            state.globalSettings.promptImage = document.getElementById('prompt-image-input').value;
+            state.globalSettings.promptVoice = document.getElementById('prompt-voice-input').value;
+            state.globalSettings.promptTransfer = document.getElementById('prompt-transfer-input').value;
+            state.globalSettings.promptSingle = document.getElementById('prompt-single-input').value;
+            state.globalSettings.promptGroup = document.getElementById('prompt-group-input').value;
+            await db.globalSettings.put(state.globalSettings);
+            alert('预设已保存！');
+        });
+        document.getElementById('restore-preset-settings-btn').addEventListener('click', async () => {
+            const confirmed = await showCustomConfirm('恢复默认设置', '确定要将所有预设恢复为默认值吗？未保存的更改将丢失。');
+            if (confirmed) {
+                document.getElementById('prompt-image-input').value = DEFAULT_PROMPT_IMAGE;
+                document.getElementById('prompt-voice-input').value = DEFAULT_PROMPT_VOICE;
+                document.getElementById('prompt-transfer-input').value = DEFAULT_PROMPT_TRANSFER;
+                document.getElementById('prompt-single-input').value = DEFAULT_PROMPT_SINGLE;
+                document.getElementById('prompt-group-input').value = DEFAULT_PROMPT_GROUP;
+                alert('已恢复为默认值，请点击“保存设置”以生效。');
+            }
+        });
+
 
         // Data management event listeners
         document.getElementById('export-data-btn').addEventListener('click', exportData);
