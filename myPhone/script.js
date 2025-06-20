@@ -1,4 +1,11 @@
+let isMessageEditMode = false;
+let editingPresetId = null;
+
 function showScreen(screenId) {
+    if (isMessageEditMode && screenId !== 'chat-interface-screen') {
+        exitMessageEditMode(false);
+    }
+
     if (screenId === 'chat-list-screen') window.renderChatListProxy();
     if (screenId === 'api-settings-screen') window.renderApiSettingsProxy();
     if (screenId === 'wallpaper-screen') window.renderWallpaperScreenProxy();
@@ -262,7 +269,11 @@ document.addEventListener('DOMContentLoaded', () => {
         bubble.className = `message-bubble ${isUser ? 'user' : 'ai'}`;
         bubble.dataset.timestamp = msg.timestamp;
 
-        bubble.addEventListener('dblclick', () => handlePat(msg));
+        bubble.addEventListener('dblclick', () => {
+            // 编辑模式下禁止拍一拍
+            if (isMessageEditMode) return;
+            handlePat(msg);
+        });
 
         let avatarSrc;
         if (chat.isGroup) {
@@ -930,9 +941,11 @@ document.addEventListener('DOMContentLoaded', () => {
         bubble.className = `message-bubble ${isUser ? 'user' : 'ai'}`;
         bubble.dataset.timestamp = msg.timestamp;
 
-        // The pat function is now bound to the double-click event.
-        bubble.addEventListener('dblclick', () => handlePat(msg));
-
+        bubble.addEventListener('dblclick', () => {
+            // 编辑模式下禁止拍一拍
+            if (isMessageEditMode) return;
+            handlePat(msg);
+        });
         let avatarSrc;
         if (chat.isGroup) {
             if (isUser) {
@@ -1279,10 +1292,80 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function enterSelectionMode(initialMsgTimestamp) {
+        if (isMessageEditMode) {
+            exitMessageEditMode(false);
+        }
         if (isSelectionMode) return;
         isSelectionMode = true;
         document.getElementById('chat-interface-screen').classList.add('selection-mode');
         toggleMessageSelection(initialMsgTimestamp);
+    }
+
+    async function exitMessageEditMode(shouldSave = false) {
+        if (!isMessageEditMode) return;
+
+        const editBtnImg = document.querySelector('#edit-messages-btn img');
+        editBtnImg.src = 'https://i.postimg.cc/V60TWbGr/image.png'; // Edit icon
+        editBtnImg.alt = '编辑';
+        document.querySelector('#edit-messages-btn').title = '编辑消息';
+
+        const chat = state.chats[state.activeChatId];
+        let changesMade = false;
+
+        document.querySelectorAll('.message-bubble .content.editable').forEach(contentEl => {
+            if (shouldSave) {
+                const timestamp = parseInt(contentEl.closest('.message-bubble').dataset.timestamp, 10);
+                const newContent = contentEl.innerHTML;
+
+                const message = chat.history.find(msg => msg.timestamp === timestamp);
+                if (message && message.content !== newContent) {
+                    message.content = newContent;
+                    changesMade = true;
+                }
+            }
+            contentEl.contentEditable = false;
+            contentEl.classList.remove('editable');
+        });
+
+        if (shouldSave && changesMade) {
+            await db.chats.put(chat);
+            showCustomAlert('保存成功', '消息已更新。');
+        }
+
+        isMessageEditMode = false;
+    }
+
+    function enterMessageEditMode() {
+        if (isMessageEditMode) return;
+
+        const editBtnImg = document.querySelector('#edit-messages-btn img');
+        editBtnImg.src = 'https://i.postimg.cc/GtrQTBZ1/image.png';
+        editBtnImg.alt = '保存';
+        document.querySelector('#edit-messages-btn').title = '保存编辑';
+
+        document.querySelectorAll('.message-bubble:not(.system-message-container) .content').forEach(contentEl => {
+            const bubble = contentEl.closest('.message-bubble');
+            if (bubble && !bubble.classList.contains('is-sticker') &&
+                !bubble.classList.contains('is-voice-message') &&
+                !bubble.classList.contains('is-transfer') &&
+                !bubble.classList.contains('is-ai-image') &&
+                !bubble.classList.contains('has-image')) {
+                contentEl.contentEditable = true;
+                contentEl.classList.add('editable');
+            }
+        });
+        isMessageEditMode = true;
+        showCustomAlert('进入编辑模式', '您现在可以点击消息气泡来编辑其内容。完成后，请再次点击“保存”按钮。');
+    }
+
+    async function toggleMessageEditMode() {
+        if (!state.activeChatId) return;
+
+        if (isMessageEditMode) {
+            await exitMessageEditMode(true); // Exit and save
+        } else {
+            enterMessageEditMode(); // Enter
+        }
     }
 
     function exitSelectionMode() {
@@ -1882,10 +1965,12 @@ document.addEventListener('DOMContentLoaded', () => {
         applyGlobalWallpaper();
         initBatteryManager();
         document.getElementById('back-to-list-btn').addEventListener('click', () => {
+            exitMessageEditMode(false);
             exitSelectionMode();
             state.activeChatId = null;
             showScreen('chat-list-screen');
         });
+        document.getElementById('edit-messages-btn').addEventListener('click', toggleMessageEditMode);
         document.getElementById('add-chat-btn').addEventListener('click', async () => {
             const name = await showCustomPrompt('创建新聊天', '请输入Ta的名字');
             if (name && name.trim()) {

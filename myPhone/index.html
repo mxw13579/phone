@@ -5,8 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <title>EPhone</title>
     <script src="https://unpkg.com/dexie/dist/dexie.js"></script>
-    <link rel="stylesheet"  href="./baseStyle.css">
+<!--    <link rel="stylesheet"  href="./baseStyle.css">-->
 <!--    <link rel="stylesheet" id="main-stylesheet" href="https://fastly.jsdelivr.net/gh/mxw13579/phone@release-v1.0.0.2/myPhone/style.css">-->
+    <link rel="stylesheet"  href="https://fastly.jsdelivr.net/gh/mxw13579/phone@release-v1.0.0.3/myPhone/baseStyle.css">
     <link rel="stylesheet" id="main-stylesheet" href="./beautifyStyle.css">
 </head>
 <body>
@@ -40,7 +41,7 @@
                         <div class="icon-bg"><img src="https://i.postimg.cc/htP74QkL/1.jpg" alt="世界书"></div>
                         <span class="label">世界书</span></div>
                     <div class="app-icon" onclick="showScreen('preset-list-screen')">
-                        <div class="icon-bg"><img src="https://i.postimg.cc/tJnB8tB6/preset.png" alt="预设设置"></div>
+                        <div class="icon-bg"><img src="https://i.postimg.cc/MKfTfsmq/1.png" alt="预设设置"></div>
                         <span class="label">预设设置</span></div>
                 </div>
                 <div class="app-row">
@@ -225,6 +226,9 @@
                     <span class="back-btn" id="back-to-list-btn">‹</span>
                     <span id="chat-header-title">聊天对象</span>
                     <div class="header-actions">
+                        <span class="action-btn" id="edit-messages-btn" title="编辑消息"><img
+                                src="https://i.postimg.cc/V60TWbGr/image.png" alt="编辑"></span>
+
                         <span class="action-btn" id="listen-together-btn" title="一起听"><img
                                 src="https://i.postimg.cc/8kYShvrJ/90-UI-2.png" alt="一起听"></span>
                         <span class="action-btn" id="chat-settings-btn" title="聊天设置"><img
@@ -584,7 +588,7 @@
 
 <audio id="audio-player" style="display:none;"></audio>
 
-<script src="https://fastly.jsdelivr.net/gh/mxw13579/phone@release-v1.0.0.2/myPhone/script.js"></script>
+<script src="https://fastly.jsdelivr.net/gh/mxw13579/phone@release-v1.0.0.3/myPhone/script.js"></script>
 <!--<script src="./script.js"></script>-->
 </body>
 </html>
