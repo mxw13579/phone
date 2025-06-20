@@ -1,10 +1,10 @@
 [
   {
     "author": "erane",
-    "version": "version",
-    "description": "description",
-    "remark": "remark",
-    "css_url": "https://fastly.jsdelivr.net/gh/Erane/erane.github.io@refs/heads/phone/theme1.css"
+    "version": "1.0.0",
+    "description": "小清新美化",
+    "remark": "小清新美化",
+    "css_url": "https://fastly.jsdelivr.net/gh/mxw13579/phone@release-v1.0.0.2/myPhone/theme1.css"
   },
   {
     "author": "ee",
