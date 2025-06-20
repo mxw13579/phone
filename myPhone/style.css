@@ -52,7 +52,7 @@ body {
 #phone-screen {
     width: var(--screen-width);
     height: var(--screen-height);
-    background-color: #000;
+    background-color: #f7f4ed;
     border-radius: 40px;
     position: relative;
     overflow: hidden;
@@ -2158,3 +2158,109 @@ body {
     display: none;
 }
 
+#theme-list-container {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    padding: 10px 0;
+}
+.theme-item {
+    padding: 12px 15px;
+    border: 1px solid #eee;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background-color 0.2s, border-color 0.2s;
+}
+.theme-item:has(input:checked) {
+    background-color: #e7f3ff;
+    border-color: var(--accent-color);
+}
+.theme-item-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+.theme-item-header input[type="radio"] {
+    flex-shrink: 0;
+    margin: 0;
+}
+.theme-item-header label {
+    font-weight: 600;
+    color: var(--text-secondary);
+    cursor: pointer;
+}
+.theme-item-details {
+    display: flex;
+    gap: 15px;
+    font-size: 12px;
+    color: var(--text-secondary);
+    margin-top: 8px;
+    margin-left: 28px;
+}
+.theme-item-remark {
+    font-size: 13px;
+    color: #555;
+    margin: 8px 0 0 28px;
+    line-height: 1.4;
+    word-break: break-word;
+}
+
+.data-management-title {
+    font-size: 18px;
+    font-weight: 600;
+    margin-bottom: 10px;
+    color: var(--text-secondary);
+}
+
+.preset-list-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 20px;
+    border-bottom: 1px solid var(--border-color);
+}
+.preset-list-item.active {
+    background-color: #f0f8ff;
+}
+.preset-info {
+    flex-grow: 1;
+}
+.preset-name {
+    font-weight: 600;
+    font-size: 16px;
+    margin-bottom: 4px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+.active-indicator {
+    color: #ffd700;
+    font-size: 18px;
+}
+.preset-remark {
+    font-size: 13px;
+    color: var(--text-secondary);
+}
+.preset-actions {
+    display: flex;
+    flex-shrink: 0;
+    gap: 8px;
+}
+.action-btn-small {
+    padding: 6px 12px;
+    font-size: 13px;
+    border: 1px solid var(--accent-color);
+    color: var(--accent-color);
+    background-color: white;
+    border-radius: 6px;
+    cursor: pointer;
+}
+.action-btn-small:disabled {
+    border-color: #ccc;
+    color: #ccc;
+    cursor: not-allowed;
+    background-color: #f5f5f5;
+}
+#delete-preset-btn {
+    border: 1px solid #d9534f;
+}
