@@ -4,13 +4,13 @@
     "version": "1.0.0",
     "description": "小清新美化",
     "remark": "小清新美化",
-    "css_url": "https://ghfast.top/https://raw.githubusercontent.com/mxw13579/phone/refs/heads/master/eePhone/theme12323.css"
+    "css_url": "https://fastly.jsdelivr.net/gh/mxw13579/phone@release-v1.0.0.7/eePhone/theme1.css"
   },
   {
     "author": "ee",
     "version": "1.0.0.2",
     "description": "默认主题",
     "remark": "默认主题",
-    "css_url": "https://fastly.jsdelivr.net/gh/mxw13579/phone@release-v1.0.0.2/myPhone/style.css"
+    "css_url": "https://fastly.jsdelivr.net/gh/mxw13579/phone@release-v1.0.0.7/myPhone/style.css"
   }
 ]
