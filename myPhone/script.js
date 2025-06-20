@@ -2548,7 +2548,7 @@ document.addEventListener('DOMContentLoaded', () => {
         // --- 主题与外观 ---
         // 按钮：选择内置主题
         document.getElementById('open-builtin-themes-btn').addEventListener('click', () => {
-            const builtinThemeListUrl = 'https://fastly.jsdelivr.net/gh/mxw13579/phone@latest/myPhone/themeList.json';
+            const builtinThemeListUrl = 'https://ghfast.top/https://raw.githubusercontent.com/mxw13579/phone/refs/heads/master/myPhone/themeList.json';
             openThemeListModal(builtinThemeListUrl, '选择内置主题');
         });
 
