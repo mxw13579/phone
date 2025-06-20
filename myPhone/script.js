@@ -2086,7 +2086,16 @@ document.addEventListener('DOMContentLoaded', () => {
             chatInput.style.height = 'auto';
             chatInput.focus();
         });
-        document.getElementById('wait-reply-btn').addEventListener('click', triggerAiResponse);
+        document.getElementById('wait-reply-btn').addEventListener('click', () => {
+            triggerAiResponse();
+            // 点击后自动滚动到底部
+            setTimeout(() => {
+                const messagesContainer = document.getElementById('chat-messages');
+                if (messagesContainer) {
+                    messagesContainer.scrollTop = messagesContainer.scrollHeight;
+                }
+            }, 50);
+        });
         chatInput.addEventListener('keypress', (e) => {
             if (e.key === 'Enter' && !e.shiftKey) {
                 e.preventDefault();
@@ -2539,7 +2548,7 @@ document.addEventListener('DOMContentLoaded', () => {
         // --- 主题与外观 ---
         // 按钮：选择内置主题
         document.getElementById('open-builtin-themes-btn').addEventListener('click', () => {
-            const builtinThemeListUrl = 'https://fastly.jsdelivr.net/gh/mxw13579/phone@master/myPhone/themeList.json';
+            const builtinThemeListUrl = 'https://fastly.jsdelivr.net/gh/mxw13579/phone@latest/myPhone/themeList.json';
             openThemeListModal(builtinThemeListUrl, '选择内置主题');
         });
 
